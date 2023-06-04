@@ -51,7 +51,7 @@ bool Log::init(const char *file_name, int close_log, int log_buf_size, int split
 
     //从后往前找到第一个/的位置
     const char *p = strrchr(file_name, '/'); // char *strrchr(const char *str, int c) 在参数 str 所指向的字符串中搜索最后一次出现字符 c（一个无符号字符）的位置
-    char log_full_name[256] = {0};
+    char log_full_name[291] = {0};
 
     //相当于自定义日志名
     //若输入的文件名没有/，则直接将时间+文件名作为日志名
@@ -62,7 +62,7 @@ bool Log::init(const char *file_name, int close_log, int log_buf_size, int split
         //(1) 如果格式化后的字符串长度 < size，则将此字符串全部复制到str中，并给其后添加一个字符串结束符('\0')；
         //(2) 如果格式化后的字符串长度 >= size，则只将其中的(size-1)个字符复制到str中，并给其后添加一个字符串结束符('\0')，
         //返回值为欲写入的字符串长度
-        snprintf(log_full_name, 255, "%d_%02d_%02d_%s", my_tm.tm_year + 1900, my_tm.tm_mon + 1, my_tm.tm_mday, file_name);
+        snprintf(log_full_name, 290, "%d_%02d_%02d_%s", my_tm.tm_year + 1900, my_tm.tm_mon + 1, my_tm.tm_mday, file_name);
     }
     else
     {   
@@ -71,7 +71,7 @@ bool Log::init(const char *file_name, int close_log, int log_buf_size, int split
         //dirname相当于./
         strcpy(log_name, p + 1);
         strncpy(dir_name, file_name, p - file_name + 1); // p为filename 中最后一个/的地址
-        snprintf(log_full_name, 255, "%s%d_%02d_%02d_%s", dir_name, my_tm.tm_year + 1900, my_tm.tm_mon + 1, my_tm.tm_mday, log_name);
+        snprintf(log_full_name, 290, "%s%d_%02d_%02d_%s", dir_name, my_tm.tm_year + 1900, my_tm.tm_mon + 1, my_tm.tm_mday, log_name);
     }
 
     m_today = my_tm.tm_mday;
@@ -124,7 +124,7 @@ void Log::write_log(int level, const char *format, ...)
     if (m_today != my_tm.tm_mday || m_count % m_split_lines == 0) //everyday log
     {
         
-        char new_log[256] = {0};
+        char new_log[291] = {0};
         fflush(m_fp);
         fclose(m_fp);
         char tail[16] = {0};
@@ -135,14 +135,14 @@ void Log::write_log(int level, const char *format, ...)
         //如果是时间不是今天,则创建今天的日志，更新m_today和m_count
         if (m_today != my_tm.tm_mday)
         {
-            snprintf(new_log, 255, "%s%s%s", dir_name, tail, log_name);
+            snprintf(new_log, 290, "%s%s%s", dir_name, tail, log_name);
             m_today = my_tm.tm_mday;
             m_count = 0;
         }
         else
         {
             //超过了最大行，在之前的日志名基础上加后缀, m_count/m_split_lines
-            snprintf(new_log, 255, "%s%s%s.%lld", dir_name, tail, log_name, m_count / m_split_lines);
+            snprintf(new_log, 290, "%s%s%s.%lld", dir_name, tail, log_name, m_count / m_split_lines);
         }
         m_fp = fopen(new_log, "a");
     }

@@ -38,7 +38,7 @@ private:
 };
 
 template<typename T> 
-threadpool<T>::threadpool(int thread_num, int max_requests): m_thread_num(thread_num), m_max_requests(max_requests) {
+threadpool<T>::threadpool(int thread_num, int max_requests): m_thread_num(thread_num), m_max_requests(max_requests), m_stop(false), m_threads(NULL) {
     if((thread_num <= 0) || (max_requests) <= 0) {
         throw std::exception();
     }
@@ -80,11 +80,13 @@ bool threadpool<T>::append(T* request) {
         m_queuelocker.unlock();
         return false;
     }
-
     request_workqueue.push_back(request);
     m_queuelocker.unlock();
 
-    m_queuestat.post();
+    m_queuestat.post(); //post当信号值>=0时
+    //为什么先unlock再post？
+    //假设当前队列满了，也就是信号量值为0，此时再post就会阻塞，如果此时锁的释放在post后面，那么该线程就会一直拿着锁不释放
+    //而其他线程获取不到锁，就会一直等待，就造成了死锁
     return true;
 }
 
@@ -97,18 +99,21 @@ void* threadpool<T>::worker(void* arg) {
 
 template<typename T>
 void threadpool<T>::run() {
+
     while(!m_stop) {
         m_queuestat.wait();
+
         m_queuelocker.lock();
         if(request_workqueue.empty()) {
             m_queuelocker.unlock();
             continue;
         }
 
+
         T* request = request_workqueue.front();
         request_workqueue.pop_front();
         m_queuelocker.unlock();
-
+        
         if(!request) {
             continue;
         }

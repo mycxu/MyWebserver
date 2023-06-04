@@ -9,6 +9,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <pthread.h>
+#include <queue>
 #include <sys/time.h>
 #include "../lock/locker.h"
 using namespace std;
@@ -50,19 +51,20 @@ public:
 
         m_mutex.unlock();
     }
+
     //判断队列是否满了
     bool full() 
     {
         m_mutex.lock();
         if (m_size >= m_max_size)
         {
-
             m_mutex.unlock();
             return true;
         }
         m_mutex.unlock();
         return false;
     }
+
     //判断队列是否为空
     bool empty() 
     {
@@ -75,6 +77,7 @@ public:
         m_mutex.unlock();
         return false;
     }
+
     //返回队首元素
     bool front(T &value) 
     {
@@ -108,8 +111,8 @@ public:
 
         m_mutex.lock();
         tmp = m_size;
-
         m_mutex.unlock();
+
         return tmp;
     }
 
@@ -119,20 +122,19 @@ public:
 
         m_mutex.lock();
         tmp = m_max_size;
-
         m_mutex.unlock();
+
         return tmp;
     }
+
     //往队列添加元素，需要将所有使用队列的线程先唤醒
     //当有元素push进队列,相当于生产者生产了一个元素
     //若当前没有线程等待条件变量,则唤醒无意义
     bool push(const T &item)
     {
-
         m_mutex.lock();
-        if (m_size >= m_max_size)
+        while (m_size >= m_max_size)
         {
-
             m_cond.broadcast();
             m_mutex.unlock();
             return false;
@@ -147,6 +149,7 @@ public:
         m_mutex.unlock();
         return true;
     }
+    
     //pop时,如果当前队列没有元素,将会等待条件变量
     bool pop(T &item)
     {
@@ -167,6 +170,7 @@ public:
         m_front = (m_front + 1) % m_max_size;
         item = m_array[m_front];
         m_size--;
+
         m_mutex.unlock();
         return true;
     }
@@ -207,6 +211,11 @@ private:
     cond m_cond;
 
     T *m_array;
+    //没有使用STL的queue作为基本数据结构，而是使用循环数组作为基本数据结构，性能应该比queue高，省去了动态内存分配和回收。
+    //内存效率：循环数组使用固定大小的数组，没有动态内存分配的开销，因此在内存使用方面更高效。而std::queue通常使用动态分配的数据结构，可能需要更多的内存开销。
+    //运行时性能：由于循环数组使用连续的内存块存储元素，对于CPU缓存更友好，访问元素的速度更快。相比之下，std::queue可能在内存中分散存储元素，导致缓存未命中，对于大量元素的操作可能会稍慢一些。
+    //控制容量：使用循环数组，您可以明确地定义队列的容量，而std::queue没有提供直接的方法来限制容量。这可以帮助您控制队列的大小，避免无限增长或者在资源受限的情况下导致内存溢出。
+
     int m_size;
     int m_max_size;
     int m_front;

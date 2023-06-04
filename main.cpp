@@ -14,7 +14,7 @@
 #include "./threadpool/thread_pool.h"
 #include "./lock/locker.h"
 #include "./http/http_conn.h"
-#include "config.h"
+#include "./config/config.h"
 
 int main(int argc, char* argv[]) {
     Config config;

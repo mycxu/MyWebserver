@@ -4,7 +4,7 @@
 int http_conn::m_epollfd = -1;
 int http_conn::m_user_count = 0;
 
-const char* doc_root = "/home/robot/webserver/resources";
+const char* doc_root = "/home/gu/webserver_test/root";
 
 // ����HTTP��Ӧ��һЩ״̬��Ϣ
 const char* ok_200_title = "OK";
@@ -290,6 +290,57 @@ http_conn::HTTP_CODE http_conn::do_request() {
     strcpy(m_real_file, doc_root);
     int len = strlen(doc_root);
     strncpy(m_real_file + len, m_url, FILENAME_LEN - len - 1);
+    const char *p = strrchr(m_url, '/');
+
+    printf("m_real_file: %s\n", m_real_file);
+
+    if (*(p + 1) == '0')
+    {
+        char *m_url_real = (char *)malloc(sizeof(char) * 200);
+        strcpy(m_url_real, "/register.html");
+
+        strncpy(m_real_file + len, m_url_real, strlen(m_url_real));
+
+        std::cout<<"m_real_file:"<<m_real_file<<std::endl;
+        free(m_url_real);
+
+    }
+    else if (*(p + 1) == '1')
+    {
+        char *m_url_real = (char *)malloc(sizeof(char) * 200);
+        strcpy(m_url_real, "/log.html");
+        strncpy(m_real_file + len, m_url_real, strlen(m_url_real));
+
+        free(m_url_real);
+    }
+    else if (*(p + 1) == '5')
+    {
+        char *m_url_real = (char *)malloc(sizeof(char) * 200);
+        strcpy(m_url_real, "/picture.html");
+        strncpy(m_real_file + len, m_url_real, strlen(m_url_real));
+
+        free(m_url_real);
+    }
+    else if (*(p + 1) == '6')
+    {
+        char *m_url_real = (char *)malloc(sizeof(char) * 200);
+        strcpy(m_url_real, "/video.html");
+        strncpy(m_real_file + len, m_url_real, strlen(m_url_real));
+
+        free(m_url_real);
+    }
+    else if (*(p + 1) == '7')
+    {
+        char *m_url_real = (char *)malloc(sizeof(char) * 200);
+        strcpy(m_url_real, "/fans.html");
+        strncpy(m_real_file + len, m_url_real, strlen(m_url_real));
+
+        free(m_url_real);
+    }
+    else
+        strncpy(m_real_file + len, m_url, FILENAME_LEN - len - 1);
+
+    
 
     if (stat(m_real_file, &m_file_stat) < 0) {
         return NO_RESOURCE;
@@ -302,7 +353,7 @@ http_conn::HTTP_CODE http_conn::do_request() {
     if (S_ISDIR(m_file_stat.st_mode)) {
         return BAD_REQUEST;
     }
-
+    
     int fd = open(m_real_file, O_RDONLY);
     m_file_address = (char*)mmap(0, m_file_stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     close(fd);
@@ -322,6 +373,7 @@ http_conn::HTTP_CODE http_conn::process_read() {
         switch (m_check_state) {
             case CHECK_STATE_REQUESTLINE: {
                 ret = parse_request_line(text);
+                
                 if (ret == BAD_REQUEST) {
                     return BAD_REQUEST;
                 }
@@ -329,6 +381,7 @@ http_conn::HTTP_CODE http_conn::process_read() {
             }
             case CHECK_STATE_HEADER: {
                 ret = parse_headers(text);
+
                 if (ret == BAD_REQUEST) {
                     return BAD_REQUEST;
                 }
@@ -339,6 +392,7 @@ http_conn::HTTP_CODE http_conn::process_read() {
             }
             case CHECK_STATE_CONTENT: {
                 ret = parse_content(text);
+
                 if (ret == GET_REQUEST) {
                     return do_request();
                 }
