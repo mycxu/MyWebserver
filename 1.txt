@@ -1,3 +1,0 @@
-g++ ./timer/lst_timer.cpp ./threadpool/thread_pool.h ./lock/locker.h ./http/http_conn.cpp webserver.cpp config.cpp main.cpp -o server -lpthread
-
-g++ ./timer/priority_timer.cpp ./threadpool/thread_pool.h ./lock/locker.h ./http/http_conn.cpp webserver.cpp config.cpp main.cpp -o server -lpthread
